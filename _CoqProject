@@ -366,3 +366,5 @@ theories/Categories/Utf8.v
 contrib/HoTTBook.v
 contrib/HoTTBookExercises.v
 contrib/Freudenthal.v
+contrib/Groupoid.v
+contrib/quotient1.v
