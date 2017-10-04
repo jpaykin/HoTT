@@ -62,14 +62,12 @@ Section groupoid.
     rewrite H_g.
     reflexivity.
   Defined.
-  Local Infix "oo" := cmp_eq (at level 30) : groupoid_scope.
-
 
   Lemma inv_compose : forall (G : groupoid) {x y z} (f : R x y) (g : R y z),
         (g o f)^ = f^ o g^.
   Proof.
     intros.
-    apply inv_eq.
+    apply (inv_eq G).
     refine (_ o (g_assoc G _ _ _)^).
     rewrite (g_assoc G g^ f^ f).
     rewrite (g_V_r G).
@@ -88,4 +86,11 @@ Module Export GroupoidNotations.
   Notation "f ^" := (symmetry _ _ f) : groupoid_scope.
 End GroupoidNotations.
 
-  
+
+
+Arguments g_1_l {A} {R R_refl R_trans R_symm} G {x y} : rename.
+Arguments g_1_r {A} {R R_refl R_trans R_symm} G {x y} : rename.
+Arguments g_assoc {A} {R R_refl R_trans R_symm} G {x y z w} : rename.
+Arguments g_V_l {A} {R R_refl R_trans R_symm} G {x y} : rename.
+Arguments g_V_r {A} {R R_refl R_trans R_symm} G {x y} : rename.
+Arguments g_V_V {A} {R R_refl R_trans R_symm} G {x y} : rename.
