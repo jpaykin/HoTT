@@ -94,3 +94,95 @@ Arguments g_assoc {A} {R R_refl R_trans R_symm} G {x y z w} : rename.
 Arguments g_V_l {A} {R R_refl R_trans R_symm} G {x y} : rename.
 Arguments g_V_r {A} {R R_refl R_trans R_symm} G {x y} : rename.
 Arguments g_V_V {A} {R R_refl R_trans R_symm} G {x y} : rename.
+
+
+
+Section GroupoidPair.
+  Variable A B : Type.
+  Variable (R_A : A -> A -> Type).
+  Variable (R_B : B -> B -> Type).
+
+  Context {R_A_refl  : Reflexive R_A}
+          {R_A_trans : Transitive R_A}
+          {R_A_sym   : Symmetric R_A}.
+  Context {R_B_refl  : Reflexive R_B}
+          {R_B_trans : Transitive R_B}
+          {R_B_sym   : Symmetric R_B}.
+
+  Variable g_A : groupoid A R_A.
+  Variable g_B : groupoid B R_B.
+
+  Definition R_pair (z : A * B) (z' : A * B) : Type :=
+    let (a,b) := z in
+    let (a',b') := z' in
+    R_A a a' * R_B b b'. 
+  Global Instance R_refl : Reflexive R_pair.
+  Proof.
+    intros [a b]. split; auto.
+  Defined.
+  Global Instance R_trans : Transitive R_pair.
+  Proof.
+    intros [a b] [a' b'] [a'' b''] [pf_a pf_b] [pf_a' pf_b'].
+    split; [apply (R_A_trans _ _ _ pf_a pf_a') | apply (R_B_trans _ _ _ pf_b pf_b')].
+  Defined.
+  Global Instance R_sym : Symmetric R_pair.
+  Proof.
+    intros [a b] [a' b'] [pf_a pf_b]. split; auto.
+  Defined.
+
+  Open Scope groupoid_scope.
+
+  Definition g_pair : @groupoid (A * B) R_pair R_refl R_trans R_sym.
+  Proof.
+    split.
+    * intros [a b] [a' b'] [pf_a pf_b]. 
+      simpl. unfold R_trans. simpl. 
+      fold (1 : R_A a' a').
+      fold (1 : R_B b' b').
+      fold (transitivity pf_a 1).
+      fold (transitivity pf_b 1).
+      rewrite (g_1_l g_A).
+      rewrite (g_1_l g_B).
+      reflexivity.
+    * intros [a b] [a' b'] [pf_a pf_b].
+      simpl. unfold R_trans. simpl.
+      fold (1 : R_A a a).
+      fold (1 : R_B b b).
+      fold (transitivity 1 pf_a).
+      fold (transitivity 1 pf_b).
+      rewrite (g_1_r g_A).
+      rewrite (g_1_r g_B).
+      reflexivity.
+    * intros [a1 b1] [a2 b2] [a3 b3] [a4 b4] [a12 b12] [a23 b23] [a34 b34].
+      simpl. unfold R_trans.
+      fold (a23 o a12). fold (a34 o (a23 o a12)).
+      fold (b23 o b12). fold (b34 o (b23 o b12)).
+      fold (a34 o a23). fold ((a34 o a23) o a12).
+      fold (b34 o b23). fold ((b34 o b23) o b12).
+      rewrite (g_assoc g_A).
+      rewrite (g_assoc g_B).
+      reflexivity.
+    * intros [a b] [a' b'] [pf_a pf_b].
+      simpl. unfold R_trans, R_refl; simpl.
+      fold (pf_a ^). fold (pf_b ^).
+      fold (pf_a o pf_a^).
+      fold (pf_b o pf_b^).
+      rewrite (g_V_r g_A).
+      rewrite (g_V_r g_B).
+      reflexivity.
+    * intros [a b] [a' b'] [pf_a pf_b].
+      simpl. unfold R_trans, R_refl; simpl.
+      fold (pf_a ^). fold (pf_b ^).
+      fold (pf_a^ o pf_a).
+      fold (pf_b^ o pf_b).
+      rewrite (g_V_l g_A).
+      rewrite (g_V_l g_B).
+      reflexivity.
+  Defined.
+
+
+End GroupoidPair.
+
+Arguments R_pair {A B} R_A R_B.
+Arguments g_pair {A B R_A R_B R_A_refl R_A_trans R_A_sym R_B_refl R_B_trans R_B_sym}.
+
