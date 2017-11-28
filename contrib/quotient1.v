@@ -59,6 +59,7 @@ Section Domain.
       ( match a with
         | point x => fun _ _ _ => P_point x
         end ) P_1Type P_cell P_compose.
+
     Axiom quotient1_ind_cell : forall {x y} (f : R x y),
           apD quotient1_ind (cell f) = P_cell _ _ f.
 
@@ -93,7 +94,6 @@ Proof.
   auto.
 Qed.
 
-
 Lemma transport_const_inv : forall {A B} {x1 x2 : A} 
                                    (p : x1 = x2) {y1 y2 : B} (q : y1 = y2),
       transport_const p y1 @ q
@@ -109,8 +109,6 @@ Proof. intros.
        apply moveL_Vp.
        apply (apD_const _ _)^.
 Defined.
-
-
 
 
 
@@ -373,6 +371,37 @@ Defined.
       apply P_compose'.
     Defined.
   End quotient1_ind2.
+
+
+  Section quotient1_inv.
+
+    Lemma concat_Vp_inversion : forall {A} {x y : A} (p : x = y) (q : y = x),
+          p @ q = 1 ->
+          p^ = q.
+    Proof.
+      intros B x y p q H.
+      set (H' := moveR_Vp _ _ _ H^).
+      rewrite concat_p1 in H'.
+      exact H'.
+    Qed.
+
+    (* not sure how to prove this, maybe need to add as an axiom? Check
+       documentation *)
+    Lemma quotient1_1 : forall x, cell 1 = (1 : point _ _ x = point _ _ x).
+    Admitted.
+
+    Lemma quotient1_inv : forall x y (f : R x y),
+                                     (cell f)^%path = cell (f^)%groupoid.
+    Proof.
+      intros x y f.
+      apply concat_Vp_inversion.
+      rewrite <- cell_compose.
+      rewrite g_V_l; auto.
+      apply quotient1_1.
+    Qed.
+      
+  End quotient1_inv.
+
 
 
 End Domain.
@@ -655,7 +684,7 @@ End Quotient1.
       fold (a13 o a12).
       fold (b13 o b12).
       apply C_compose.
-    Qed.
+    Defined.
 
     Definition quotient1_rec2 : quotient1 G_A -> quotient1 G_B -> C.
     Proof.
@@ -663,6 +692,20 @@ End Quotient1.
       apply quotient1_rec2_curry.
       apply (quotient1_curry _ _ _ _ _ _ a b).
     Defined.
+
+    Lemma quotient1_rec2_point : forall a b,
+        quotient1_rec2 (point G_A a) (point G_B b) = C_point a b.
+    Proof.
+      intros.
+      unfold quotient1_rec2. 
+      unfold quotient1_rec2_curry. 
+      unfold quotient1_curry. simpl.
+      unfold C_point'.
+      reflexivity.
+    Qed.
+
+
+
   End quotient1_rec2.
 
 
@@ -702,6 +745,7 @@ End Quotient1.
     (* Want: quotient G_A G_B G_C f : A/G_A -> B/G_B -> C/G_C *)
     Variable map_cell : forall {a a' b b'}, 
              R_A a a' -> R_B b b' -> R_C (f a b) (f a' b').
+
     Variable map_compose : forall {a1 a2 a3 b1 b2 b3}
                                   (a12 : R_A a1 a2) (a23 : R_A a2 a3)
                                   (b12 : R_B b1 b2) (b23 : R_B b2 b3),
@@ -733,6 +777,16 @@ End Quotient1.
                                 (C_cell := C_cell0);
         [ apply quotient1_trunc | apply C_compose0 ].
     Defined.
+
+    Lemma qutoient1_map2_point : forall a b,
+        quotient1_map2 (point G_A a) (point G_B b) = point G_C (f a b).
+    Proof.
+      intros.
+      unfold quotient1_map2.
+      rewrite quotient1_rec2_point.
+      unfold C_point0.
+      reflexivity.
+    Qed.
 
 
   End quotient1_map2.
