@@ -385,10 +385,35 @@ Defined.
       exact H'.
     Qed.
 
-    (* not sure how to prove this, maybe need to add as an axiom? Check
-       documentation *)
+
+    Lemma concat_V_idempotent : forall {A} {x : A} (p : x = x),
+          p @ p^ = p -> p = 1.
+    Proof.
+      intros B x p H.
+      refine (H^ @ _).
+      apply concat_pV.
+    Qed.
+
+    Lemma concat_p_p : forall {A} {x : A} (p : x = x),
+        p @ p = p -> p = 1.
+    Proof.
+      intros B x p H.
+      apply concat_V_idempotent.
+      refine ((H^ @@ 1) @ _).
+      refine (concat_pp_p _ _ _ @ _).
+      refine (1 @@ concat_pV _ @ _).
+      apply concat_p1.      
+    Qed.
+
+
     Lemma quotient1_1 : forall x, cell 1 = (1 : point _ _ x = point _ _ x).
-    Admitted.
+    Proof.
+      intros x.
+      apply concat_p_p.
+      rewrite <- cell_compose.
+      apply ap.
+      apply (g_1_l G 1).
+    Qed.
 
     Lemma quotient1_inv : forall x y (f : R x y),
                                      (cell f)^%path = cell (f^)%groupoid.
