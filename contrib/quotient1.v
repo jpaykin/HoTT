@@ -20,7 +20,7 @@ Module Export Quotient1.
 Section Domain.
   Variable A : Type.
   Variable R : A -> A -> Type.
-  Context {A_set : IsHSet A} 
+  Context (*{A_set : IsHSet A} *)
           {R_HSet : forall x y, IsHSet (R x y)}
           {R_refl : Reflexive R}
           {R_trans : Transitive R}
@@ -30,7 +30,7 @@ Section Domain.
   Local Open Scope groupoid_scope.
 
   Private Inductive quotient1 (R : A -> A -> Type) 
-                    `{IsHSet A} `{R_HSet : forall x y, IsHSet (R x y)}
+                    (*`{IsHSet A}*) `{R_HSet : forall x y, IsHSet (R x y)}
                     `{Reflexive _ R} `{Transitive _ R} `{Symmetric _ R} 
                      (G : groupoid A R) : Type :=
   | point : A -> quotient1 R G
@@ -240,137 +240,7 @@ Defined.
     Defined.
   End quotient1_ind_set.
 
-  Section quotient1_ind2.
-    Variable P : quotient1 R G -> quotient1 R G -> Type.
-    Context {P_1Type : forall q r, IsTrunc 1 (P q r)}.
-    Variable P_point : forall x y, P (point R G x) (point R G y).
-
-
-    Let P_HSet : forall {q r} (pf1 pf2 : P q r), IsHSet (pf1 = pf2).
-    Proof.
-      intros.
-      intros x y. simpl.
-      apply P_1Type.
-    Qed.
-
-
-    Variable P_cell_l : forall {x x' y} (f : R x x'),
-                        transport (fun r => P r (point R G y)) (cell f) (P_point x y) 
-                      = P_point x' y.
-
-    Variable P_compose_l : forall {x1 x2 x3 y} (f : R x1 x2) (g : R x2 x3),
-             P_cell_l _ _ y (g o f)
-           = transport2 _ (cell_compose f g) (P_point x1 y)
-           @ (transport_pp _ _ _ _
-           @ ap _ (P_cell_l _ _ y f)
-           @ P_cell_l _ _ y g).
-
-
-    Variable P_cell_r : forall x {y y'} (f : R y y'),
-                        transport (P (point R G x)) (cell f) (P_point x y) 
-                      = P_point x y'.
-
-    Variable P_compose_r : forall {x y1 y2 y3} (f : R y1 y2) (g : R y2 y3),
-             P_cell_r x _ _ (g o f)
-           = transport2 _ (cell_compose f g) (P_point x y1)
-           @ (transport_pp _ _ _ _
-           @ ap _ (P_cell_r x _ _ f)
-           @ P_cell_r x _ _ g).
-
-
-
-    Let P_point' (q : quotient1 R G) : forall y, P q (point R G y).
-    Proof.
-      intros y.
-      generalize dependent q. 
-      set (Q := fun r => P r (point R G y)).
-      transparent assert (P_point0 : (forall x, P (point R G x) (point R G y))).
-      { intros x. exact (P_point x y). }
-      transparent assert (P_cell0 : (forall {x x'} (f : R x x'),
-                 transport Q (cell f) (P_point0 x) = P_point0 x')).
-      { intros x x' f. unfold Q, P_point0.
-        apply P_cell_l.
-      }
-      apply quotient1_ind with (P_point := P_point0) (P_cell := P_cell0);
-        unfold Q; auto.
-      intros x1 x2 x3 f g.
-      unfold P_cell0.
-      apply P_compose_l.
-    Defined.
-
-    Variable P_cell_r_eq : forall {x x' y y'} (f : R x x') (g : R y y'),
-        transport (fun r => transport (P r) (cell g) (P_point' r y) = P_point' r y')
-                  (cell f) (P_cell_r x y y' g) 
-      = P_cell_r x' y y' g.
-
-
-    Let P_cell_r' q : forall {y y'} (g : R y y'),
-                      transport (P q) (cell g) (P_point' q y)
-                    = P_point' q y'.
-    Proof.
-      intros.
-      generalize dependent q.
-      set (Q := fun r => transport (P r) (cell g) (P_point' r y) = P_point' r y').
-      transparent assert (Q_point : (forall x, Q (point R G x))).
-      { intros; unfold Q. simpl.
-        apply P_cell_r.
-      }
-      apply quotient1_ind_set with (P_point := Q_point).
-      - unfold Q. intros. apply P_HSet.
-      - intros. apply P_cell_r_eq.
-    Defined.
-
-    Let P_cell' : forall (q : quotient1 R G) {x' y'} (f : R x' y'),
-                  cell f # P_point' q x' = P_point' q y'.
-    Proof.
-      intros.
-      generalize dependent q.
-      set (P0 := fun r => transport (P r) (cell f) (P_point' r x') = P_point' r y').
-      transparent assert (P_point0 : (forall x, P0 (point R G x))).
-      { intros x. apply P_cell_r. }
-      apply quotient1_ind_set with (P_point := P_point0); intros; unfold P0; auto.
-      unfold P_point0.
-      apply P_cell_r_eq.
-    Defined.
-
-
-    Let Q {x y z} (f : R x y) (g : R y z) q := 
-                    P_cell' q (g o f)
-                   = transport2 (P q) (cell_compose f g) (P_point' q x)
-                   @ ((transport_pp (P q) (cell f) (cell g) (P_point' q x)
-                   @ ap (transport (P q) (cell g)) (P_cell' q f))
-                   @ P_cell' q g).
-
-    Let Q_point : forall {y1 y2 y3} (f : R y1 y2) (g : R y2 y3) x,
-                  Q f g (point R G x).
-    Proof.
-      intros; unfold Q.
-      simpl.
-      apply P_compose_r.
-    Defined.
-
-    Let P_compose' : forall {x y z} (f : R x y) (g : R y z) q,
-                     Q f g q.
-    Proof.
-      intros.
-      generalize dependent q.
-      apply quotient1_ind_set with (P_point := Q_point f g); intros.
-      - apply trunc_succ.
-      - unfold Q_point.
-        set (X := P_compose_r y0 x y z f g).
-        set (H := P_HSet _ _ (P_cell_r y0 x z (g o f))).
-        simpl in H.
-        apply H.
-    Defined.
-
-    Definition quotient1_ind2 : forall q r, P q r.
-    Proof.
-      intros q.
-      apply quotient1_ind with (P_point := P_point' q) (P_cell := @P_cell' q);
-        intros; auto.
-      apply P_compose'.
-    Defined.
-  End quotient1_ind2.
+      
 
 
   Section quotient1_inv.
@@ -431,44 +301,217 @@ Defined.
 
 End Domain.
 
-Arguments quotient1 {A} {R} {IsHSet} {R_HSet} {reflR transR symmR} G : rename.
-Arguments point {A} {R} {IsHSet} {R_HSet} {reflR transR symmR} G : rename.
-Arguments cell {A} {R} {IsHSet} {R_HSet} {reflR transR symmR} G {x y} : rename.
-Arguments cell_compose {A} {R} {IsHSet} {R_HSet} {reflR transR symmR} G {x y z} : rename.
+Arguments quotient1 {A} {R} (*{IsHSet}*) {R_HSet} {reflR transR symmR} G : rename.
+Arguments point {A} {R} (*{IsHSet}*) {R_HSet} {reflR transR symmR} G : rename.
+Arguments cell {A} {R} (*{IsHSet}*) {R_HSet} {reflR transR symmR} G {x y} : rename.
+Arguments cell_compose {A} {R} (*{IsHSet}*) {R_HSet} {reflR transR symmR} G {x y z} : rename.
 About quotient1_rec2.
-Arguments quotient1_ind {A R A_set R_HSet R_refl R_trans R_symm G} P {P_1Type}.
-Arguments quotient1_rec {A R A_set R_HSet R_refl R_trans R_symm G}.
-Arguments quotient1_ind_set {A R A_set R_HSet R_refl R_trans R_symm G} P {P_set}.
-Arguments quotient1_rec_set {A R A_set R_HSet R_refl R_trans R_symm G}.
-Arguments quotient1_ind2 {A R A_set R_HSet R_refl R_trans R_symm G} P {P_1Type}.
-(*Arguments quotient1_rec2 {A R A_set R_HSet R_refl R_trans R_symm G}.*)
+Arguments quotient1_ind {A R (*A_set*) R_HSet R_refl R_trans R_symm G} P {P_1Type}.
+Arguments quotient1_rec {A R (*A_set*) R_HSet R_refl R_trans R_symm G}.
+Arguments quotient1_ind_set {A R (*A_set*) R_HSet R_refl R_trans R_symm G} P {P_set}.
+Arguments quotient1_rec_set {A R (*A_set*) R_HSet R_refl R_trans R_symm G}.
+(*Arguments quotient1_ind2 {A R (*A_set*) R_HSet R_refl R_trans R_symm G} P {P_1Type}.*)
+(*Arguments quotient1_rec2 {A R (*A_set*) R_HSet R_refl R_trans R_symm G}.*)
 
 End Quotient1.
 
 
 (******************************)
 
+Section Quotient1_multi.
   Open Scope groupoid_scope.
 
+  Variable A : Type.
+  Variable R_A : A -> A -> Type.
+  Context (*{A_set : IsHSet A} *)
+          {R_A_HSet : forall x y, IsHSet (R_A x y)}
+          {R_A_refl : Reflexive R_A}
+          {R_A_trans : Transitive R_A}
+          {R_A_symm : Symmetric R_A}.
+  Variable G_A : groupoid A R_A.
+
+  Variable B : Type.
+  Variable R_B : B -> B -> Type.
+  Context (*{B_set : IsHSet B} *)
+          {R_B_HSet : forall x y, IsHSet (R_B x y)}
+          {R_B_refl : Reflexive R_B}
+          {R_B_trans : Transitive R_B}
+          {R_B_symm : Symmetric R_B}.
+  Variable G_B : groupoid B R_B.
+
+
+  Section quotient1_ind2.
+    Variable P : quotient1 G_A -> quotient1 G_B -> Type.
+    Context {P_1Type : forall q r, IsTrunc 1 (P q r)}.
+    Variable P_point : forall x y, P (point G_A x) (point G_B y).
+
+
+    Let P_HSet : forall {x y} (pf1 pf2 : P x y), IsHSet (pf1 = pf2).
+    Proof.
+      intros x y pf1 pf2. do 2 intro. simpl.
+      apply P_1Type.
+    Qed.
+
+
+    Variable P_cell_l : forall {x x' y} (f : R_A x x'),
+                        transport (fun r => P r (point G_B y)) (cell G_A f) (P_point x y) 
+                      = P_point x' y.
+
+    Variable P_cell_r : forall x {y y'} (f : R_B y y'),
+                        transport (P (point G_A x)) (cell G_B f) (P_point x y) 
+                      = P_point x y'.
+
+    Variable P_compose_l : forall {x1 x2 x3 y} (f : R_A x1 x2) (g : R_A x2 x3),
+             P_cell_l x1 x3 y (g o f)
+           = transport2 _ (cell_compose G_A f g) (P_point x1 y)
+           @ (transport_pp _ _ _ _
+           @ ap _ (P_cell_l _ _ y f)
+           @ P_cell_l _ _ y g).
+
+    Variable P_compose_r : forall {x y1 y2 y3} (f : R_B y1 y2) (g : R_B y2 y3),
+             P_cell_r x _ _ (g o f)
+           = transport2 _ (cell_compose G_B f g) (P_point x y1)
+           @ (transport_pp _ _ _ _
+           @ ap _ (P_cell_r x _ _ f)
+           @ P_cell_r x _ _ g).
+
+
+    Let P_point' (q : quotient1 G_A) : forall y, P q (point G_B y).
+    Proof.
+      intros y.
+      generalize dependent q. 
+      set (Q := fun r => P r (point G_B y)).
+      transparent assert (P_point0 : (forall x, P (point G_A x) (point G_B y))).
+      { intros x. exact (P_point x y). }
+      transparent assert (P_cell0 : (forall {x x'} (f : R_A x x'),
+                 transport Q (cell _ f) (P_point0 x) = P_point0 x')).
+      { intros x x' f. unfold Q, P_point0.
+        apply P_cell_l.
+      }
+      apply quotient1_ind with (P_point1 := P_point0) (P_cell := P_cell0);
+        unfold Q; auto.
+      intros x1 x2 x3 f g.
+      unfold P_cell0.
+      apply P_compose_l.
+    Defined.
+
+    (* It might be possible to get rid of this hypothesis? *)
+    Variable P_cell_r_eq : forall {x x' y y'} (f : R_A x x') (g : R_B y y'),
+        transport (fun r => transport (P r) (cell _ g) (P_point' r y) = P_point' r y')
+                  (cell _ f) (P_cell_r x y y' g) 
+      = P_cell_r x' y y' g.
+
+
+    Let P_cell_r' q : forall {y y'} (g : R_B y y'),
+                      transport (P q) (cell _ g) (P_point' q y)
+                    = P_point' q y'.
+    Proof.
+      intros.
+      generalize dependent q.
+      set (Q := fun r => transport (P r) (cell _ g) (P_point' r y) = P_point' r y').
+      transparent assert (Q_point : (forall x, Q (point G_A x))).
+      { intros; unfold Q. simpl.
+        apply P_cell_r.
+      }
+      apply quotient1_ind_set with (P_point0 := Q_point).
+      - unfold Q. intros. apply P_HSet.
+      - intros. apply P_cell_r_eq.
+    Defined.
+
+    Let P_cell' : forall (q : quotient1 G_A) {x' y'} (f : R_B x' y'),
+                  cell _ f # P_point' q x' = P_point' q y'.
+    Proof.
+      intros.
+      generalize dependent q.
+      set (P0 := fun r => transport (P r) (cell _ f) (P_point' r x') = P_point' r y').
+      transparent assert (P_point0 : (forall x, P0 (point _ x))).
+      { intros x. apply P_cell_r. }
+      apply quotient1_ind_set with (P_point1 := P_point0); intros; unfold P0; auto.
+      unfold P_point0.
+      apply P_cell_r_eq.
+    Defined.
+
+
+    Let Q {x y z} (f : R_B x y) (g : R_B y z) q := 
+                    P_cell' q (g o f)
+                   = transport2 (P q) (cell_compose _ f g) (P_point' q x)
+                   @ ((transport_pp (P q) (cell _ f) (cell _ g) (P_point' q x)
+                   @ ap (transport (P q) (cell _ g)) (P_cell' q f))
+                   @ P_cell' q g).
+
+    Let Q_point : forall {y1 y2 y3} (f : R_B y1 y2) (g : R_B y2 y3) x,
+                  Q f g (point G_A x).
+    Proof.
+      intros; unfold Q.
+      simpl.
+      apply P_compose_r.
+    Defined.
+
+    Let P_compose' : forall {x y z} (f : R_B x y) (g : R_B y z) q,
+                     Q f g q.
+    Proof.
+      intros.
+      generalize dependent q.
+      apply quotient1_ind_set with (P_point0 := Q_point f g); intros.
+      - apply trunc_succ.
+      - unfold Q_point.
+        set (X := P_compose_r y0 x y z f g).
+        set (H := P_HSet _ _ (P_cell_r y0 x z (g o f))).
+        simpl in H.
+        apply H.
+    Defined.
+
+    Definition quotient1_ind2 : forall q r, P q r.
+    Proof.
+      intros q.
+      apply quotient1_ind with (P_point0 := P_point' q) (P_cell := @P_cell' q);
+        intros; auto.
+      apply P_compose'.
+    Defined.
+  End quotient1_ind2.
+
+  Section quotient1_ind2_set.
+    Variable P : quotient1 G_A -> quotient1 G_B -> Type.
+    Context {P_set : forall q r, IsHSet (P q r)}.
+    Variable P_point : forall x y, P (point G_A x) (point G_B y).
+
+    Variable P_cell_l : forall {x x' y} (f : R_A x x'),
+                        transport (fun r => P r (point G_B y)) (cell G_A f) (P_point x y) 
+                      = P_point x' y.
+
+    Variable P_cell_r : forall x {y y'} (f : R_B y y'),
+                        transport (P (point G_A x)) (cell G_B f) (P_point x y) 
+                      = P_point x y'.
+
+    Let P_compose_l : forall {x1 x2 x3 y} (f : R_A x1 x2) (g : R_A x2 x3),
+             P_cell_l x1 x3 y (g o f)
+           = transport2 _ (cell_compose G_A f g) (P_point x1 y)
+           @ (transport_pp _ _ _ _
+           @ ap _ (P_cell_l _ _ y f)
+           @ P_cell_l _ _ y g).
+    Proof.
+      intros. 
+      apply P_set.
+    Qed.
+             
+
+    Let P_1Type : forall q r, IsTrunc 1 (P q r).
+    Proof.  intros q r. exact _. Qed.
+
+    Definition quotient1_ind2_set : forall q r, P q r.
+    Proof.
+      apply quotient1_ind2 with (P_1Type := P_1Type)
+                                (P_point := P_point)
+                                (P_cell_l := P_cell_l)
+                                (P_cell_r := P_cell_r)
+                                (P_compose_l := @P_compose_l).
+      * intros. apply P_set.
+      * intros. apply P_set.
+    Defined.
+
+  End quotient1_ind2_set.
+
   Section quotient1_map.
-
-    Variable A : Type.
-    Variable R_A : A -> A -> Type.
-    Context {A_set : IsHSet A} 
-            {R_A_HSet : forall x y, IsHSet (R_A x y)}
-            {R_A_refl : Reflexive R_A}
-            {R_A_trans : Transitive R_A}
-            {R_A_symm : Symmetric R_A}.
-    Variable G_A : groupoid A R_A.
-
-    Variable B : Type.
-    Variable R_B : B -> B -> Type.
-    Context {B_set : IsHSet B} 
-            {R_B_HSet : forall x y, IsHSet (R_B x y)}
-            {R_B_refl : Reflexive R_B}
-            {R_B_trans : Transitive R_B}
-            {R_B_symm : Symmetric R_B}.
-    Variable G_B : groupoid B R_B.
 
     Variable f : A -> B.
     (* Want: quotient f G_A G_B : (A/G_A) (B/G_B) *)
@@ -488,20 +531,49 @@ End Quotient1.
              (C_cell := fun x y pf => cell G_B (map_cell _ _ pf)).
       * intros. 
         simpl.
-        fold (g o f0).
-        rewrite map_compose.
-
-        rewrite cell_compose.
-        reflexivity.
+        fold (g o f0). 
+        refine (ap (cell G_B) (map_compose _ _ _ _ _) @ cell_compose _ _ _).
       * apply quotient1_trunc. 
     Defined.
+
+    Lemma quotient1_map_point : forall a,
+          quotient1_map (point G_A a) = point G_B (f a).
+    Proof.
+      intros a. reflexivity.
+    Qed.
 
   End quotient1_map.
 
 
     (* These should be derived from the library... *)
-    Instance pair_HSet A B `{IsHSet A} `{IsHSet B} : IsHSet (A*B).
+    Lemma pair_inv : forall {A B} {a a' : A} {b b' : B},
+          (a,b) = (a',b') -> (a=a') * (b = b').
     Admitted.
+
+    Lemma pair_inv_eq : forall {A B} {a a' : A} {b b' : B} (*`{IsHSet A} `{IsHSet B}*)
+          (p : (a,b) = (a',b')),
+          p = ap (fun x => (x,b)) (fst (pair_inv p))
+            @ ap (fun y => (a',y)) (snd (pair_inv p)).
+    Admitted.
+
+    Instance pair_trunc A B n 
+            `{H_A : IsTrunc n A} `{H_B : IsTrunc n B} : IsTrunc n (A*B).
+    Proof. 
+      induction n. 
+      * unfold Contr in *. simpl in *.
+        destruct H_A as [a H_A], H_B as [b H_b]. 
+        apply (BuildContr _ (a,b)).
+        intros [a' b'].
+        refine (ap (fun x => (x,b)) (H_A a') @ ap (fun y => (a',y)) (H_b b')).
+      * intros [a b] [a' b'].
+        change (IsTrunc n ((a,b) = (a',b'))).
+        assert (H_A' : IsTrunc n (a = a')) by apply (@istrunc_paths _ _ H_A).
+        assert (H_B' : IsTrunc n (b = b')) by apply (@istrunc_paths _ _ H_B).
+    Admitted.
+
+    Instance pair_HSet A B `{IsHSet A} `{IsHSet B} : IsHSet (A*B).
+    Proof. exact _. Qed.
+
     Instance R_pair_HSet {A B} (R_A : A -> A -> Type) (R_B : B -> B -> Type)
                               `{forall x y, IsHSet (R_A x y)} 
                               `{forall x y, IsHSet (R_B x y)} 
@@ -512,25 +584,8 @@ End Quotient1.
       apply pair_HSet; auto.
     Qed.
 
+
   Section quotient1_curry.
-
-    Variable A : Type.
-    Variable R_A : A -> A -> Type.
-    Context {A_set : IsHSet A} 
-            {R_A_HSet : forall x y, IsHSet (R_A x y)}
-            {R_A_refl : Reflexive R_A}
-            {R_A_trans : Transitive R_A}
-            {R_A_symm : Symmetric R_A}.
-    Variable G_A : groupoid A R_A.
-
-    Variable B : Type.
-    Variable R_B : B -> B -> Type.
-    Context {B_set : IsHSet B} 
-            {R_B_HSet : forall x y, IsHSet (R_B x y)}
-            {R_B_refl : Reflexive R_B}
-            {R_B_trans : Transitive R_B}
-            {R_B_symm : Symmetric R_B}.
-    Variable G_B : groupoid B R_B.
 
     Let C_point_a_b (a : A) (b : B) : quotient1 (g_pair G_A G_B) := 
       point (g_pair G_A G_B) (a,b).
@@ -585,24 +640,42 @@ End Quotient1.
       split; [exact 1 | exact f].
     Defined.
 
+
     (* Don't know how to prove this.. *)
-    Let P_cell0 {b b'} (f : R_B b b') : forall a a' (g : R_A a a'),
-        transport (P0 f) (cell _ g) (P_point0 f a) = (P_point0 f a').
+    Let P_cell0 {b b'} (g : R_B b b') : forall a a' (f : R_A a a'),
+        transport (P0 g) (cell _ f) (P_point0 g a) = (P_point0 g a').
     Proof.
-      intros a a' g.
-      unfold P_point0.
-      unfold P0.
-      Search (transport _ _ (cell _ _)).
-      About apD.
+      intros a a' f. 
+      unfold P_point0. About transport. About apD.
+(*
+    Variable z : quotient1 (g_pair G_A G_B).
+    Variable y : B.
+    Let Q := fun qA => z = C_point_b qA y.
+    Variable mypath : forall x, z = point (g_pair G_A G_B) (x,y).
+    Let mypath' x : Q (point _ x) := mypath x.
+    Variable x x' : A.
+    Variable (f : R_A x x'). 
+    Let f' : R_pair R_A R_B (x,y) (x',y).
+    Proof.
+      refine (f,1).
+    Defined.
+
+    Let foo : transport Q (cell G_A f) (mypath x) 
+            = mypath x @ cell (g_pair G_A G_B) f'.
+    Proof.
+    Admitted.
+*)
     Admitted.    
 
-    Let C_cell_curry q_a : forall x y, R_B x y -> C_point_b q_a x = C_point_b q_a y.
+
+    Let C_cell_curry q_a : forall y y', R_B y y' -> 
+        C_point_b q_a y = C_point_b q_a y'.
     Proof.
-      intros x y f .
+      intros y y' g.
       generalize dependent q_a.
-      apply quotient1_ind with (P := P0 f)
-                               (P_point := P_point0 f)
-                               (P_cell := P_cell0 f).
+      apply quotient1_ind with (P := P0 g)
+                               (P_point := P_point0 g)
+                               (P_cell := P_cell0 g).
       * intros q_a. unfold P0. 
         apply trunc_succ.
       * intros. apply quotient1_trunc.
@@ -623,7 +696,13 @@ End Quotient1.
       { intros. unfold P1. simpl.
         fold (g o f). 
         unfold P_point0.
-        admit (* this is true *).
+        refine (_ @ cell_compose _ _ _).
+        apply ap.
+        simpl. unfold R_trans.
+        fold (g o f).
+        apply (ap (fun h => (h,g o f))).
+        fold (1 : R_A a a). fold ((1 : R_A a a) o 1). 
+        apply (g_1_l G_A _)^.
       }
 
 
@@ -631,8 +710,7 @@ End Quotient1.
                                    (P_point := P_point1).
       * intros q_a. apply trunc_succ.
       * intros. apply quotient1_trunc.
-    Admitted.
-
+    Defined.
 
 
     Definition quotient1_curry 
@@ -648,25 +726,141 @@ End Quotient1.
 
   End quotient1_curry.
 
+(*
   Section quotient1_rec2.
 
-    Variable A : Type.
-    Variable R_A : A -> A -> Type.
-    Context {A_set : IsHSet A} 
-            {R_A_HSet : forall x y, IsHSet (R_A x y)}
-            {R_A_refl : Reflexive R_A}
-            {R_A_trans : Transitive R_A}
-            {R_A_symm : Symmetric R_A}.
-    Variable G_A : groupoid A R_A.
 
-    Variable B : Type.
-    Variable R_B : B -> B -> Type.
-    Context {B_set : IsHSet B} 
-            {R_B_HSet : forall x y, IsHSet (R_B x y)}
-            {R_B_refl : Reflexive R_B}
-            {R_B_trans : Transitive R_B}
-            {R_B_symm : Symmetric R_B}.
-    Variable G_B : groupoid B R_B.
+    Variable C : Type.
+    Context {C_1Type : IsTrunc 1 C}.
+    Variable C_point : A -> B -> C. 
+(*
+    Variable C_cell_l : forall {x x' y} (f : R_A x x'),
+             C_point x y = C_point x' y.
+    Variable C_cell_r : forall {x y y'} (g : R_B y y'),
+             C_point x y' = C_point x y'.
+*)
+
+    Variable C_cell : forall {x x' y y'} (f : R_A x x') (g : R_B y y'),
+             C_point x y = C_point x' y'.
+
+    Variable C_compose : forall {x1 x2 x3 y1 y2 y3} 
+                                (f1 : R_A x1 x2) (f2 : R_A x2 x3) 
+                                (g1 : R_B y1 y2) (g2 : R_B y2 y3),
+             C_cell _ _ _ _ (f2 o f1) (g2 o g1)
+           = C_cell _ _ _ _ f1 g1 @ C_cell _ _ _ _ f2 g2.
+
+
+    Let C_HSet : forall (pf1 pf2 : C), IsHSet (pf1 = pf2).
+    Proof.
+      intros.
+      intros x y. simpl.
+      apply C_1Type.
+    Qed.
+
+        
+
+(*
+
+    Let C_point' (z : A * B) : C :=
+      let (a,b) := z in C_point a b.
+    Let C_cell' (z z' : A*B) : R_pair R_A R_B z z' -> C_point' z = C_point' z'.
+    Proof.
+      destruct z as [a b], z' as [a' b'].
+      intros [pf_a pf_b]; simpl in *.
+      unfold C_point'.
+      apply (C_cell _ _ _ _ pf_a pf_b).
+    Defined.
+*)
+
+    Let C1_cell (b : B) : forall x x' (f : R_A x x'),
+        C_point x b = C_point x' b.
+    Proof.
+      intros x x' f.
+      apply (C_cell _ _ _ _ f 1).
+    Defined.
+
+    Let C0_point (qA : quotient1 G_A) (b : B) : C.
+    Proof.
+      generalize dependent qA.
+      apply quotient1_rec with (C_point0 := fun a => C_point a b)
+                               (C_cell0 := C1_cell b); auto.
+      intros x y z f g.
+      unfold C1_cell.
+
+      transitivity (C_cell x z b b (g o f) (1 o 1)); 
+        [apply (ap _ (g_1_l G_B _)^) | ].
+      apply C_compose.
+    Defined.
+
+
+    Let P0 y y' (g : R_B y y') := fun qA => C0_point qA y = C0_point qA y'.
+    Let P0_point y y' (g : R_B y y') : forall x, P0 y y' g (point _ x).
+    Proof.
+      intros x. unfold P0. simpl.
+      apply (C_cell _ _ _ _ 1 g).
+    Defined.
+
+
+    (* I think this should be provable... *)
+    Variable C0_compose_l : forall {x x' y y'} (f : R_A x x') (g : R_B y y'),
+        transport (fun qA => C0_point qA y = C0_point qA y') (cell _ f) 
+                (C_cell x x y y' 1 g) = C_cell x' x' y y' 1 g.
+    
+
+
+    Let C0_cell : forall qA y y' (f : R_B y y'),
+        C0_point qA y = C0_point qA y'.
+    Proof.
+      intros qA y y' g.
+      generalize dependent qA.
+      apply quotient1_ind_set with (P := P0 y y' g)
+                                   (P_point := P0_point y y' g).
+      * intros qA. unfold P0. exact _.
+      * intros x x' f. unfold P0_point. unfold P0.
+        apply C0_compose_l.
+    Defined.
+
+    Let P1 y1 y2 y3 (g1 : R_B y1 y2) (g2 : R_B y2 y3) := fun qA =>
+        C0_cell qA _ _ (g2 o g1) = C0_cell qA _ _ g1 @ C0_cell qA _ _ g2.
+    Let P1_point y1 y2 y3 (g1 : R_B y1 y2) (g2 : R_B y2 y3) : forall a,
+        P1 y1 y2 y3 g1 g2 (point G_A a).
+    Proof.
+      intros a. unfold P1. simpl. unfold P0_point.
+      fold (g2 o g1).
+      refine (_ @ C_compose _ _ _ _ _ _ _ _ _ _).
+        apply (ap (fun f => C_cell a a y1 y3 f (g2 o g1))). 
+        apply (g_1_l G_A _)^.
+    Defined.
+
+    Let C0_cell_compose : forall y1 y2 y3 (g1 : R_B y1 y2) (g2 : R_B y2 y3) 
+                                 (qA : quotient1 G_A),
+        C0_cell qA _ _ (g2 o g1) = C0_cell qA _ _ g1 @ C0_cell qA _ _ g2.
+    Proof.
+      intros y1 y2 y3 g1 g2.
+      apply quotient1_ind_set with (P_point := P1_point y1 y2 y3 g1 g2).
+      - intros qA. unfold P1. exact _.
+      - intros x y f.
+        admit (* maybe also can be derived? *).
+    Admitted.
+
+
+    Definition quotient1_rec2 : quotient1 G_A -> quotient1 G_B -> C.
+    Proof.
+      intros qA.
+      apply quotient1_rec with (C_point0 := C0_point qA)
+                               (C_cell0 := C0_cell qA); auto.
+      intros. generalize dependent qA.
+      apply C0_cell_compose.
+    Defined.
+ 
+
+
+  End quotient1_rec2.
+*)
+
+
+  Section quotient1_rec2.
+
 
     Variable C : Type.
     Context {C_1Type : IsTrunc 1 C}.
@@ -715,7 +909,7 @@ End Quotient1.
     Proof.
       intros a b.
       apply quotient1_rec2_curry.
-      apply (quotient1_curry _ _ _ _ _ _ a b).
+      apply (quotient1_curry a b).
     Defined.
 
     Lemma quotient1_rec2_point : forall a b,
@@ -729,37 +923,14 @@ End Quotient1.
       reflexivity.
     Qed.
 
-
-
   End quotient1_rec2.
-
-
 
 
   Section quotient1_map2.
 
-
-    Variable A : Type.
-    Variable R_A : A -> A -> Type.
-    Context {A_set : IsHSet A} 
-            {R_A_HSet : forall x y, IsHSet (R_A x y)}
-            {R_A_refl : Reflexive R_A}
-            {R_A_trans : Transitive R_A}
-            {R_A_symm : Symmetric R_A}.
-    Variable G_A : groupoid A R_A.
-
-    Variable B : Type.
-    Variable R_B : B -> B -> Type.
-    Context {B_set : IsHSet B} 
-            {R_B_HSet : forall x y, IsHSet (R_B x y)}
-            {R_B_refl : Reflexive R_B}
-            {R_B_trans : Transitive R_B}
-            {R_B_symm : Symmetric R_B}.
-    Variable G_B : groupoid B R_B.
-
     Variable C : Type.
     Variable R_C : C -> C -> Type.
-    Context {C_set : IsHSet C} 
+    Context (*{C_set : IsHSet C} *)
             {R_C_HSet : forall x y, IsHSet (R_C x y)}
             {R_C_refl : Reflexive R_C}
             {R_C_trans : Transitive R_C}
@@ -791,24 +962,23 @@ End Quotient1.
     Proof.
       intros.
       unfold C_cell0.
-      rewrite map_compose.
-      apply cell_compose.
+      refine (ap (cell G_C) _ @ cell_compose _ _ _).
+      apply map_compose.
     Defined.
       
     Definition quotient1_map2 : quotient1 G_A -> quotient1 G_B -> quotient1 G_C.
     Proof.
-
       apply quotient1_rec2 with (C_point := C_point0)
                                 (C_cell := C_cell0);
         [ apply quotient1_trunc | apply C_compose0 ].
     Defined.
 
-    Lemma qutoient1_map2_point : forall a b,
+    Lemma quotient1_map2_point : forall a b,
         quotient1_map2 (point G_A a) (point G_B b) = point G_C (f a b).
     Proof.
       intros.
       unfold quotient1_map2.
-      rewrite quotient1_rec2_point.
+      unfold quotient1_rec2. simpl.
       unfold C_point0.
       reflexivity.
     Qed.
@@ -817,79 +987,4 @@ End Quotient1.
   End quotient1_map2.
 
 
-
-(*
-    Definition C_point2_l : quotient1 R G -> A -> C.
-    Proof.
-      intros q x. generalize dependent q. About quotient1_rec.
-      transparent assert (C_cell' : (forall y1 y2, R y1 y2 ->
-        C_point x y1 = C_point x y2)).
-      { intros y1 y2 g. apply (C_cell _ _ _ _ 1%groupoid g). }
-      apply quotient1_rec with (C_point := fun y => C_point x y)
-                               (C_cell := C_cell'); auto.
-      intros.
-      unfold C_cell'.
-      refine (_ @ C_compose _ _ _ _ _ _ _ _ _ _).
-      refine (ap (fun r => C_cell _ _ _ _ r (g o f)) _).
-      apply (g_1_l G 1)^.
-    Defined.
-
-
-  Variable C_cell_r_eq : forall {x1 x2 y1 y2} (f : R x1 x2) (g : R y1 y2),
-           transport (fun q => C_point2_l q y1 = C_point2_l q y2)
-                     (cell f) (C_cell y1 y2 x1 x1 g 1) = C_cell y1 y2 x2 x2 g 1.
-(*
-
-  Variable C_cell_l_eq : forall {x1 x2 y1 y2} (f : R x1 x2) (g : R y1 y2),
-           transport (fun q => C_point' q y1 = C_point' q y2)
-                     (cell g) (C_cell y1 y1 _ _ 1 f) = C_cell y2 y2 _ _ 1 f.
-*)
-
-
-    Let C_cell' : forall q {y1 y2} (g : R y1 y2), C_point2_l q y1 = C_point2_l q y2.
-    Proof.
-      intros.
-      generalize dependent q.
-      transparent assert (P_point : (forall x, C_point2_l (point R G x) y1 = C_point2_l (point R G x) y2)).
-      { unfold C_point2_l; intros. simpl.
-        apply (C_cell _ _ _ x g 1%groupoid).
-      }
-      apply quotient1_ind_set with (P_point := P_point); intros.
-      - apply C_HSet.
-      - unfold P_point.
-        apply C_cell_r_eq.
-    Defined.
-
-
-    Let C_compose' : forall q {y1 y2 y3} (f : R y1 y2) (g : R y2 y3),
-        C_cell' q (g o f) = C_cell' q f @ C_cell' q g.        
-    Proof.
-      intros.
-      generalize dependent q.
-      set (Q := fun q => C_cell' q (g o f) = C_cell' q f @ C_cell' q g).
-      About quotient1_ind_set.
-      transparent assert (Q_point : (forall x, Q (point R G x))).
-      { intros. unfold Q.
-        simpl.
-        About C_compose. 
-        refine (_ @ (C_compose _ _ _ _ _ _ _ _ _ _)).
-        refine (ap (fun r => C_cell _ _ _ _ (g o f) r) _).
-        apply (g_1_l G _)^.
-      }
-          apply quotient1_ind_set with (P_point := Q_point); intros; auto.
-      - apply trunc_succ.
-      - apply C_HSet.
-    Defined.
-
-
-    Definition quotient1_rec2 : quotient1 R G -> quotient1 R G -> C.
-    Proof.
-      intros q.
-      apply quotient1_rec with (C_point := C_point2_l q) (C_cell := @C_cell' q).
-      - apply C_compose'.
-      - auto.
-    Defined.
-
-
-  End quotient1_rec2.
-*)
+End Quotient1_multi.
