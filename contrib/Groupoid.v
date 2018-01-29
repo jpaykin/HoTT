@@ -76,6 +76,15 @@ Section groupoid.
   Qed.
 
 
+
+  Lemma g_1_v : forall (G : groupoid) {x}, (1 : R x x)^ = 1.
+  Proof.
+    intros G x.
+    refine ((g_1_l G _)^ @ _).
+    apply (g_V_r G).
+  Qed.
+  
+
 End groupoid.
 
 Close Scope groupoid_scope.
@@ -179,6 +188,26 @@ Section GroupoidPair.
       rewrite (g_V_l g_B).
       reflexivity.
   Defined.
+
+  Lemma g_pair_refl : forall a b, (1 : R_pair (a,b) (a,b)) = (1,1).
+  Proof.
+    intros. reflexivity.
+  Qed.
+
+  Lemma g_pair_sym : forall a a' b b' (f : R_A a a') (g : R_B b b'),
+    (f,g)^ = ((f^,g^) : R_pair (a',b') (a,b)).
+  Proof.
+    intros. reflexivity.
+  Qed.
+
+  Lemma g_pair_trans : forall a1 a2 a3 b1 b2 b3 
+                              (f : R_A a1 a2) (f' : R_A a2 a3)
+                              (g : R_B b1 b2) (g' : R_B b2 b3),
+      ((f',g') : R_pair (a2,b2) (a3,b3)) o ((f,g) : R_pair (a1,b1) (a2,b2)) 
+    = ((f' o f, g' o g) : R_pair (a1,b1) (a3,b3)).
+  Proof.
+    reflexivity.
+  Qed.
 
 
 End GroupoidPair.
