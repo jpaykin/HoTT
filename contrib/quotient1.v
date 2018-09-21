@@ -1,6 +1,7 @@
 (* -*- mode: coq; mode: visual-line -*-  *)
 Require Import HoTT.Basics.
 Require Import Groupoid.
+Require Import Types.Prod.
 
 
 (** * Quotient of a Type by a groupoid 
@@ -41,6 +42,7 @@ Section Domain.
   Axiom quotient1_trunc : IsTrunc 1 (quotient1 R G).
   Global Existing Instance quotient1_trunc.
 
+  (* The induction principle for groupoid quotients *)
   Section quotient1_ind.
 
     Variable P : quotient1 R G -> Type.
@@ -112,6 +114,7 @@ Defined.
 
 
 
+  (** The recursion principle for groupoid quotients *)
   Section quotient1_rec.
 
     Variable C : Type.
@@ -208,6 +211,7 @@ Defined.
   
   End quotient1_rec.
 
+  (* The recursion principle can be simplified when the property is a set *)
   Section quotient1_rec_set.
 
     Variable C : Type.
@@ -224,6 +228,7 @@ Defined.
     Defined.
   End quotient1_rec_set.
 
+  (* The induction principle can be simplified when the property is a set *)
   Section quotient1_ind_set.
     
     Variable P : quotient1 R G -> Type.
@@ -242,7 +247,7 @@ Defined.
 
       
 
-
+  (** Inversion principles on paths and quotient types. *)
   Section quotient1_inv.
 
     Lemma concat_Vp_inversion : forall {A} {x y : A} (p : x = y) (q : y = x),
@@ -318,6 +323,8 @@ End Quotient1.
 
 (******************************)
 
+(* We establish several specialized inducition principles for pairs of
+groupoids.*)
 Section Quotient1_multi.
   Open Scope groupoid_scope.
 
@@ -340,6 +347,7 @@ Section Quotient1_multi.
   Variable G_B : groupoid B R_B.
 
 
+  (* Induction over a pair of quotient types *)
   Section quotient1_ind2.
     Variable P : quotient1 G_A -> quotient1 G_B -> Type.
     Context {P_1Type : forall q r, IsTrunc 1 (P q r)}.
@@ -470,6 +478,7 @@ Section Quotient1_multi.
     Defined.
   End quotient1_ind2.
 
+  (* Induction principle over a pair of quotient types whith a set-valued property *)
   Section quotient1_ind2_set.
     Variable P : quotient1 G_A -> quotient1 G_B -> Type.
     Context {P_set : forall q r, IsHSet (P q r)}.
@@ -511,6 +520,7 @@ Section Quotient1_multi.
 
   End quotient1_ind2_set.
 
+  (* Quotients are functors *)
   Section quotient1_map.
 
     Variable f : A -> B.
@@ -544,33 +554,6 @@ Section Quotient1_multi.
 
   End quotient1_map.
 
-
-    (* These should be derived from the library... *)
-    Lemma pair_inv : forall {A B} {a a' : A} {b b' : B},
-          (a,b) = (a',b') -> (a=a') * (b = b').
-    Admitted.
-
-    Lemma pair_inv_eq : forall {A B} {a a' : A} {b b' : B} (*`{IsHSet A} `{IsHSet B}*)
-          (p : (a,b) = (a',b')),
-          p = ap (fun x => (x,b)) (fst (pair_inv p))
-            @ ap (fun y => (a',y)) (snd (pair_inv p)).
-    Admitted.
-
-    Instance pair_trunc A B n 
-            `{H_A : IsTrunc n A} `{H_B : IsTrunc n B} : IsTrunc n (A*B).
-    Proof. 
-      induction n. 
-      * unfold Contr in *. simpl in *.
-        destruct H_A as [a H_A], H_B as [b H_b]. 
-        apply (BuildContr _ (a,b)).
-        intros [a' b'].
-        refine (ap (fun x => (x,b)) (H_A a') @ ap (fun y => (a',y)) (H_b b')).
-      * intros [a b] [a' b'].
-        change (IsTrunc n ((a,b) = (a',b'))).
-        assert (H_A' : IsTrunc n (a = a')) by apply (@istrunc_paths _ _ H_A).
-        assert (H_B' : IsTrunc n (b = b')) by apply (@istrunc_paths _ _ H_B).
-    Admitted.
-
     Instance pair_HSet A B `{IsHSet A} `{IsHSet B} : IsHSet (A*B).
     Proof. exact _. Qed.
 
@@ -585,6 +568,8 @@ Section Quotient1_multi.
     Qed.
 
 
+  (* Map a pair of quotient types to a quotient of the pair of the underlying
+  groupoids *)
   Section quotient1_curry.
 
     Let C_point_a_b (a : A) (b : B) : quotient1 (g_pair G_A G_B) := 
@@ -781,6 +766,9 @@ Section Quotient1_multi.
 
 
 
+  (* A recursion principle over a pair of groupoid quotients, which
+  significantly simplifies the assumptions of the corresponding induction
+  principle. *)
   Section quotient1_rec2.
 
 
@@ -827,14 +815,14 @@ Section Quotient1_multi.
       apply C_compose.
     Defined.
 
-  Lemma ap2_curry : forall {A1 A2 C} (P : A1 -> A2 -> C) {x1 y1 : A1} {x2 y2 : A2} 
-                          (p1 : x1 = y1) (p2 : x2 = y2),
-      ap2 P p1 p2 
-    = ap (fun (z : A1 * A2) => let (z1,z2) := z in P z1 z2) (ap2 pair p1 p2).
-  Proof.
-    destruct p1, p2.
-    reflexivity.
-  Qed.
+    Lemma ap2_curry : forall {A1 A2 C} (P : A1 -> A2 -> C) {x1 y1 : A1} {x2 y2 : A2} 
+                            (p1 : x1 = y1) (p2 : x2 = y2),
+        ap2 P p1 p2 
+      = ap (fun (z : A1 * A2) => let (z1,z2) := z in P z1 z2) (ap2 pair p1 p2).
+    Proof.
+      destruct p1, p2.
+      reflexivity.
+    Qed.
 
     Definition quotient1_rec2 : quotient1 G_A -> quotient1 G_B -> C.
     Proof.
@@ -872,7 +860,8 @@ Section Quotient1_multi.
 
   End quotient1_rec2.
 
-
+  (* A map of type A -> B -> C can be lifted to a map of type 
+     quotient1 A -> quotient1 B -> quotient1 C *)
   Section quotient1_map2.
 
     Variable C : Type.

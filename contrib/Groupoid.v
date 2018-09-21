@@ -4,6 +4,10 @@ Delimit Scope groupoid_scope with groupoid.
 
 Local Open Scope groupoid_scope.
 
+(* A groupoid is a category where every morphism is invertible. The definition
+in this file is stand-alone, in that it does not rely on an underlying
+definition of categories. Later work could integrate this with existing
+developments of category theory in this library. *)
 Section groupoid.
   Variable A : Type.
   Variable (R : A -> A -> Type).
