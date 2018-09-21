@@ -13,7 +13,6 @@
 Set Implicit Arguments.
 
 Require Import Logic.
-Declare ML Module "nat_syntax_plugin".
 
 Global Set Universe Polymorphism.
 Global Set Asymmetric Patterns.
@@ -44,8 +43,8 @@ Notation "x + y" := (sum x y) : type_scope.
 Arguments inl {A B} _ , [A] B _.
 Arguments inr {A B} _ , A [B] _.
 
-Notation "A \/ B" := (A + B)%type (only parsing) : type_scope.
-Notation or := sum (only parsing).
+(* A notation for coproduct that's less overloaded than [+] *)
+Notation "x |_| y" := (sum x y) (only parsing) : type_scope.
 
 (** [prod A B], written [A * B], is the product of [A] and [B];
     the pair [pair A B a b] of [a] and [b] is abbreviated [(a,b)] *)

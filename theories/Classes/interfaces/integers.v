@@ -20,18 +20,18 @@ Section specializable.
   Context (Z N : Type) `{Integers Z} `{Naturals N}.
 
   Class IntAbs := int_abs_sig : forall x,
-    { n : N | naturals_to_semiring N Z n = x } \/
+    { n : N | naturals_to_semiring N Z n = x } |_|
     { n : N | naturals_to_semiring N Z n = -x }.
 
   Definition int_abs `{ia : IntAbs} (x : Z) : N :=
     match int_abs_sig x with
-    | inl (n↾_) => n
-    | inr (n↾_) => n
+    | inl (n;_) => n
+    | inr (n;_) => n
     end.
 
   Definition int_to_nat `{Zero N} `{ia : IntAbs} (x : Z) : N :=
     match int_abs_sig x with
-    | inl (n↾_) => n
-    | inr (n↾_) => 0
+    | inl (n;_) => n
+    | inr (n;_) => 0
     end.
 End specializable.

@@ -195,14 +195,14 @@ intros [|a];[intros [|b];auto|].
 - intros ? E. destruct (S_neq_0 _ E).
 Qed.
 
-Lemma mult_eq_zero : forall a b : nat, a * b =N= 0 -> a =N= 0 \/ b =N= 0.
+Lemma mult_eq_zero : forall a b : nat, a * b =N= 0 -> a =N= 0 |_| b =N= 0.
 Proof.
 intros [|a] [|b];auto.
 - intros _;right;reflexivity.
 - simpl_nat.
   intros E.
   destruct (S_neq_0 _ E).
-Qed.
+Defined.
 
 Instance nat_zero_divisors : NoZeroDivisors nat.
 Proof.
@@ -277,15 +277,15 @@ Proof.
 intros. apply le_S_S. apply zero_least.
 Qed.
 
-Lemma le_S_either : forall a b, a <= S b -> a <= b \/ a = S b.
+Lemma le_S_either : forall a b, a <= S b -> a <= b |_| a = S b.
 Proof.
 intros [|a] b.
 - intros;left;apply zero_least.
 - intros E. apply (snd (le_S_S _ _)) in E. destruct E as [|b E];auto.
   left. apply le_S_S. trivial.
-Qed.
+Defined.
 
-Lemma le_lt_dec : forall a b : nat, a <= b \/ b < a.
+Lemma le_lt_dec : forall a b : nat, a <= b |_| b < a.
 Proof.
 induction a as [|a IHa].
 - intros;left;apply zero_least.
@@ -294,7 +294,7 @@ induction a as [|a IHa].
   + destruct (IHa b).
     * left. apply le_S_S;trivial.
     * right. apply le_S_S. trivial.
-Qed.
+Defined.
 
 Lemma not_lt_0 : forall a, ~ a < 0.
 Proof.
@@ -411,7 +411,7 @@ intros a b. destruct (le_lt_dec a b) as [[|]|E];auto.
 - left. apply le_S_S. trivial.
 Qed.
 
-Global Instance nat_apart : Apart@{N N} nat := fun n m => n < m \/ m < n.
+Global Instance nat_apart : Apart@{N N} nat := fun n m => n < m |_| m < n.
 
 Instance nat_apart_mere : is_mere_relation nat nat_apart.
 Proof.
@@ -458,7 +458,7 @@ Proof.
 intros a b. destruct (le_lt_dec a b).
 - left;trivial.
 - right. apply nat_lt_not_le. trivial.
-Qed.
+Defined.
 
 Lemma S_gt_0 : forall a, 0 < S a.
 Proof.
@@ -480,13 +480,13 @@ destruct E1 as [k1 E1],E2 as [k2 E2];rewrite E2,E1.
 rewrite add_S_r,add_assoc. apply le_S_S,le_plus.
 Qed.
 
-Lemma lt_strong_cotrans : forall a b : nat, a < b -> forall c, a < c \/ c < b.
+Lemma lt_strong_cotrans : forall a b : nat, a < b -> forall c, a < c |_| c < b.
 Proof.
 intros a b E1 c.
 destruct (le_lt_dec c a) as [E2|E2].
 - right. apply nat_le_lt_trans with a;trivial.
 - left;trivial.
-Qed.
+Defined.
 
 Lemma nat_full' : FullPseudoSemiRingOrder nat_le nat_lt.
 Proof.
@@ -531,7 +531,9 @@ split;[apply _|split|].
     destruct E;auto.
 Qed.
 
-Definition nat_full@{} := nat_full'@{Ularge Ularge N}.
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
+Definition nat_full@{} := ltac:(first[exact nat_full'@{Ularge Ularge}|
+                                      exact nat_full'@{Ularge Ularge N}]).
 Local Existing Instance nat_full.
 
 Instance S_embedding : OrderEmbedding S.
@@ -597,7 +599,7 @@ Section for_another_semiring.
     : SemiRingPreserving (naturals_to_semiring nat R).
   Proof.
   repeat (split;try apply _);trivial.
-  Qed.
+  Defined.
 
   Lemma toR_unique (h : nat -> R) `{!SemiRingPreserving h} x :
     naturals_to_semiring nat R x = h x.

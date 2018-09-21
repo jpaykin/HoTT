@@ -500,6 +500,9 @@ Defined.
 
 Global Instance Zle@{} : Le Z := fun x y => Zle_hProp x y.
 
+Global Instance ishprop_Zle : is_mere_relation _ Zle.
+Proof. unfold Zle;exact _. Qed.
+
 Lemma Zle_def@{} : forall a b : PairT.T N,
   @paths@{Uhuge} Type@{UN} (' a <= ' b) (PairT.Tle@{UN UNalt} a b).
 Proof. intros; exact idpath. Qed.
@@ -526,9 +529,10 @@ split;[apply _|apply _|split|].
   apply (antisymmetry le);trivial.
 Qed.
 
-(* Where are these universes even coming from? *)
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
 Instance Z_partial_order@{} : PartialOrder Zle
-  := Z_partial_order'@{Ularge Ularge Ularge Ularge Ularge}.
+  := ltac:(first [exact Z_partial_order'@{Ularge Ularge Ularge Ularge Ularge}|
+                  exact Z_partial_order']).
 
 Lemma Zle_cast_embedding' : OrderEmbedding (cast N Z).
 Proof.
@@ -539,8 +543,10 @@ split;red.
   rewrite 2!plus_0_r;trivial.
 Qed.
 
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
 Global Instance Zle_cast_embedding@{} : OrderEmbedding (cast N Z)
-  := Zle_cast_embedding'@{Ularge Ularge}.
+  := ltac:(first [exact Zle_cast_embedding'@{Ularge Ularge}|
+                  exact Zle_cast_embedding']).
 
 Lemma Zle_plus_preserving_l' : forall z : Z, OrderPreserving ((+) z).
 Proof.
@@ -555,8 +561,10 @@ rewrite Hrw;clear Hrw.
 apply (order_preserving _),E.
 Qed.
 
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
 Instance Zle_plus_preserving_l@{} : forall z : Z, OrderPreserving ((+) z)
-  := Zle_plus_preserving_l'@{Ularge Ularge}.
+  := ltac:(first [exact Zle_plus_preserving_l'@{Ularge Ularge}|
+                  exact Zle_plus_preserving_l']).
 
 Lemma Zmult_nonneg' : forall x y : Z, PropHolds (0 ≤ x) -> PropHolds (0 ≤ y) ->
   PropHolds (0 ≤ x * y).
@@ -573,9 +581,11 @@ apply compose_le with (a * b).
 - ring_with_nat.
 Qed.
 
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
 Instance Zmult_nonneg@{} : forall x y : Z, PropHolds (0 ≤ x) -> PropHolds (0 ≤ y) ->
   PropHolds (0 ≤ x * y)
-  := Zmult_nonneg'@{Ularge Ularge Ularge}.
+  := ltac:(first [exact Zmult_nonneg'@{Ularge Ularge Ularge}|
+                  exact Zmult_nonneg']).
 
 Global Instance Z_order@{} : SemiRingOrder Zle.
 Proof. pose proof Z_ring; apply rings.from_ring_order; apply _. Qed.
@@ -599,10 +609,14 @@ Defined.
 
 Global Instance Zlt@{} : Lt Z := fun x y => Zlt_hProp x y.
 
+Global Instance ishprop_Zlt : is_mere_relation _ Zlt.
+Proof. unfold Zlt;exact _. Qed.
+
 Lemma Zlt_def' : forall a b, ' a < ' b = PairT.Tlt a b.
 Proof. reflexivity. Qed.
 
-Definition Zlt_def@{i} := Zlt_def'@{Uhuge i}.
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
+Definition Zlt_def@{i} := ltac:(first [exact Zlt_def'@{Uhuge i}|exact Zlt_def'@{i}]).
 
 Lemma Zlt_strict' : StrictOrder Zlt.
 Proof.
@@ -691,12 +705,17 @@ Global Instance Zapart@{} : Apart Z := fun x y => Zapart_hProp x y.
 Lemma Zapart_def' : forall a b, apart (' a) (' b) = PairT.Tapart a b.
 Proof. reflexivity. Qed.
 
-Definition Zapart_def@{i} := Zapart_def'@{Uhuge i}.
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
+Definition Zapart_def@{i} := ltac:(first [exact Zapart_def'@{Uhuge i}|
+                                          exact Zapart_def'@{i}]).
+
+Global Instance ishprop_Zapart : is_mere_relation _ Zapart.
+Proof. unfold Zapart;exact _. Qed.
 
 Lemma Z_trivial_apart' `{!TrivialApart N}
   : TrivialApart Z.
 Proof.
-split;try apply _.
+split;[exact _|idtac].
 apply (Z_ind2 _).
 intros [pa na] [pb nb];rewrite Zapart_def;unfold PairT.Tapart;simpl.
 split;intros E1.
@@ -784,10 +803,12 @@ split;[apply _|split;try apply _|].
   apply le_iff_not_lt_flip.
 Qed.
 
+(* Coq pre 8.8 produces phantom universes, see GitHub Coq/Coq#1033. *)
 Instance Z_full_psorder@{} : FullPseudoOrder Zle Zlt
-  := Z_full_psorder'@{
-    Ularge Ularge Ularge Ularge Ularge
-    Ularge Ularge Ularge Ularge Ularge}.
+  := ltac:(first [exact Z_full_psorder'@{Ularge Ularge Ularge Ularge Ularge
+                                                Ularge Ularge Ularge Ularge}|
+                  exact Z_full_psorder'@{Ularge Ularge Ularge Ularge Ularge
+                                         Ularge Ularge Ularge Ularge Ularge}]).
 
 Lemma Zmult_strong_ext_l' : forall z : Z, StrongExtensionality (z *.).
 Proof.
@@ -926,7 +947,7 @@ Qed.
    Otherwise we would have to truncate IntAbs. *)
 Definition Z_abs_def@{} : forall x : PairT.T N,
   (exists n : N, naturals_to_semiring N Z n = ' x)
-  \/ (exists n : N, naturals_to_semiring N Z n = - ' x).
+  |_| (exists n : N, naturals_to_semiring N Z n = - ' x).
 Proof.
 intros [a b].
 destruct (nat_distance_sig a b) as [[z E]|[z E]].
@@ -940,7 +961,7 @@ Lemma Z_abs_respects' : forall (x y : PairT.T N) (E : PairT.equiv x y),
   transport
     (fun q : Z =>
      (exists n : N, naturals_to_semiring N Z n = q)
-     \/ (exists n : N, naturals_to_semiring N Z n = - q)) (Z_path E) (Z_abs_def x)
+     |_| (exists n : N, naturals_to_semiring N Z n = - q)) (Z_path E) (Z_abs_def x)
   = Z_abs_def y.
 Proof.
 intros [pa pb] [na nb] E.
@@ -1025,7 +1046,7 @@ Global Instance Z_abs@{} : IntAbs@{UN UN UN UN UN
 Notation n_to_z := (naturals_to_semiring N Z).
 
 Definition zero_product_aux a b :
-  n_to_z a * n_to_z b = 0 -> n_to_z a = 0 \/ n_to_z b = 0.
+  n_to_z a * n_to_z b = 0 -> n_to_z a = 0 |_| n_to_z b = 0.
 Proof.
 rewrite <-rings.preserves_mult.
 rewrite <-!(naturals.to_semiring_unique (cast N Z)).

@@ -144,7 +144,12 @@ Open Scope core_scope.
 Definition const {A B} (b : B) := fun x : A => b.
 
 (** We define notation for dependent pairs because it is too annoying to write and see [existT P x y] all the time.  However, we put it in its own scope, because sometimes it is necessary to give the particular dependent type, so we'd like to be able to turn off this notation selectively. *)
+(* We define notations for nested pairs as we can't define a recursive notations; see https://github.com/coq/coq/issues/6032 (should be solved in Coq 8.8). *)
 Notation "( x ; y )" := (existT _ x y) : fibration_scope.
+Notation "( x ; y ; z )" := (x ; ( y ; z)) : fibration_scope.
+Notation "( x ; y ; z ; t )" := (x ; ( y ; (z ; t))) : fibration_scope.
+Notation "( x ; y ; z ; t ; u )" := (x ; ( y ; (z ; (t ; u)))) : fibration_scope.
+Notation "( x ; y ; z ; t ; u ; v )" := (x ; ( y ; (z ; (t ; (u ; v))))) : fibration_scope.
 (** We bind [fibration_scope] with [sigT] so that we are automatically in [fibration_scope] when we are passing an argument of type [sigT]. *)
 Bind Scope fibration_scope with sigT.
 
@@ -503,19 +508,44 @@ Notation "n .+4" := (n.+1.+3)%nat   : nat_scope.
 Notation "n .+5" := (n.+1.+4)%trunc : trunc_scope.
 Notation "n .+5" := (n.+1.+4)%nat   : nat_scope.
 Local Open Scope trunc_scope.
-Notation "-2" := minus_two (at level 0) : trunc_scope.
-Notation "-1" := (-2.+1) (at level 0) : trunc_scope.
-Notation "0" := (-1.+1) : trunc_scope.
-Notation "1" := (0.+1) : trunc_scope.
-Notation "2" := (1.+1) : trunc_scope.
-
 Fixpoint nat_to_trunc_index (n : nat) : trunc_index
   := match n with
-       | 0%nat => 0
+       | 0%nat => minus_two.+2
        | S n' => (nat_to_trunc_index n').+1
      end.
 
 Coercion nat_to_trunc_index : nat >-> trunc_index.
+
+Definition int_to_trunc_index (v : Decimal.int) : option trunc_index
+  := match v with
+     | Decimal.Pos d => Some (nat_to_trunc_index (Nat.of_uint d))
+     | Decimal.Neg d => match Nat.of_uint d with
+                        | 2%nat => Some minus_two
+                        | 1%nat => Some (minus_two.+1)
+                        | 0%nat => Some (minus_two.+2)
+                        | _ => None
+                        end
+     end.
+
+Fixpoint trunc_index_to_little_uint n acc :=
+  match n with
+  | minus_two => acc
+  | minus_two.+1 => acc
+  | minus_two.+2 => acc
+  | trunc_S n => trunc_index_to_little_uint n (Decimal.Little.succ acc)
+  end.
+
+Definition trunc_index_to_int n :=
+  match n with
+  | minus_two => Decimal.Neg (Nat.to_uint 2)
+  | minus_two.+1 => Decimal.Neg (Nat.to_uint 1)
+  | n => Decimal.Pos (Decimal.rev (trunc_index_to_little_uint n Decimal.zero))
+  end.
+
+Numeral Notation trunc_index int_to_trunc_index trunc_index_to_int : trunc_scope (warning after 5000).
+(** We declare [-2] and [-1] as notations so that they bind tighter than application, so we can write [IsTrunc -1] rather than [IsTrunc (-1)]. *)
+Notation "-2" := (- 2) : trunc_scope.
+Notation "-1" := (- 1) : trunc_scope.
 
 Fixpoint IsTrunc_internal (n : trunc_index) (A : Type) : Type :=
   match n with

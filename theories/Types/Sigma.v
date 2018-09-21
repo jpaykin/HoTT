@@ -37,14 +37,14 @@ Arguments eta_sigma / .
 
 Definition eta2_sigma `{P : forall (a : A) (b : B a), Type}
            (u : sigT (fun a => sigT (P a)))
-  : (u.1; (u.2.1; u.2.2)) = u
+  : (u.1; u.2.1; u.2.2) = u
   := 1.
 
 Arguments eta2_sigma / .
 
 Definition eta3_sigma `{P : forall (a : A) (b : B a) (c : C a b), Type}
            (u : sigT (fun a => sigT (fun b => sigT (P a b))))
-  : (u.1; (u.2.1; (u.2.2.1; u.2.2.2))) = u
+  : (u.1; u.2.1; u.2.2.1; u.2.2.2) = u
   := 1.
 
 Arguments eta3_sigma / .
@@ -383,7 +383,7 @@ Definition transport_sigma_' {A : Type} {B C : A -> Type}
            {x1 x2 : A} (p : x1 = x2)
            (yzw : { y : B x1 & { z : C x1 & D x1 y z } })
 : transport (fun x => { y : B x & { z : C x & D x y z } }) p yzw
-  = (p # yzw.1 ; (p # yzw.2.1 ; transportD2 _ _ _ p yzw.1 yzw.2.1 yzw.2.2)).
+  = (p # yzw.1 ; p # yzw.2.1 ; transportD2 _ _ _ p yzw.1 yzw.2.1 yzw.2.2).
 Proof.
   destruct p. reflexivity.
 Defined.
@@ -649,6 +649,8 @@ Definition isequiv_ap_pr1_hprop {A} {P : A -> Type}
 : IsEquiv (@ap _ _ (@pr1 A P) x y)
   := _.
 
+
+(** [path_sigma_hprop] is functorial *)
 Definition path_sigma_hprop_1 {A : Type} {P : A -> Type}
            `{forall x, IsHProp (P x)} (u : sigT P)
 : path_sigma_hprop u u 1 = 1.
@@ -659,6 +661,34 @@ Proof.
   refine (ap (fun p => match p in (_ = v2) return (u = (u.1; v2)) with 1 => 1 end)
              (contr (idpath u.2))).
 Defined.
+
+Definition path_sigma_hprop_V {A : Type} {P : A -> Type}
+           `{forall x, IsHProp (P x)} {a b : A} (p : a = b)
+           (x : P a) (y : P b)
+: path_sigma_hprop (b;y) (a;x) p^ = (path_sigma_hprop (a;x) (b;y) p)^.
+Proof.
+  destruct p; simpl.
+  rewrite (path_ishprop x y).
+  refine (path_sigma_hprop_1 _ @ (ap inverse (path_sigma_hprop_1 _))^).
+Qed.
+
+Definition path_sigma_hprop_pp
+           {A : Type}
+           {P : A -> Type}
+           `{forall x, IsHProp (P x)}
+           {a b c : A}
+           (p : a = b) (q : b = c)
+           (x : P a) (y : P b) (z : P c)
+: path_sigma_hprop (a;x) (c;z) (p @ q)
+    =
+  path_sigma_hprop (a;x) (b;y) p @ path_sigma_hprop (b;y) (c;z) q.
+Proof.
+  destruct p, q.
+  rewrite (path_ishprop y x).
+  rewrite (path_ishprop z x).
+  refine (_ @ (ap (fun z => z @ _) (path_sigma_hprop_1 _))^).
+  apply (concat_1p _)^.
+Qed.
 
 (** The inverse of [path_sigma_hprop] has its own name, so we give special names to the section and retraction homotopies to help [rewrite] out. *)
 Definition path_sigma_hprop_ap_pr1 {A : Type} {P : A -> Type}

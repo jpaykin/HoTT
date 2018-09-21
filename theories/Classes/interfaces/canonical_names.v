@@ -25,9 +25,6 @@ apply Trunc_ind.
 - exact E.
 Qed.
 
-Monomorphic Universe Ubool.
-Definition bool := (HoTT.Types.Bool.Bool@{Ubool}).
-
 Notation " g ∘ f " := (Compose g f)%mc
   (at level 40, left associativity).
 Notation "(∘)" := Compose (only parsing) : mc_scope.
@@ -53,8 +50,6 @@ Therefore we introduce the following class. *)
 Class TrivialApart A {Aap : Apart A} :=
   { trivial_apart_prop :> is_mere_relation A apart
   ; trivial_apart : forall x y, x ≶ y <-> x <> y }.
-
-Notation "x ↾ p" := (exist _ x p) (at level 20) : mc_scope.
 
 Definition sig_apart `{Apart A} (P: A -> Type) : Apart (sig P) := fun x y => x.1 ≶ y.1.
 Hint Extern 10 (Apart (sig _)) => apply @sig_apart : typeclass_instances.
@@ -245,11 +240,11 @@ Class Associative {A} (f : A -> A -> A)
 
 Class Involutive {A} (f : A -> A) := involutive: forall x, f (f x) = x.
 
-Class TotalRelation `(R : relation A) : Type := total : forall x y : A, R x y \/ R y x.
+Class TotalRelation `(R : relation A) : Type := total : forall x y : A, R x y |_| R y x.
 Arguments total {A} _ {TotalRelation} _ _.
 
 Class Trichotomy `(R : relation A)
-  := trichotomy : forall x y : A, R x y \/ x = y \/ R y x.
+  := trichotomy : forall x y : A, R x y |_| x = y |_| R y x.
 Arguments trichotomy {A} R {Trichotomy} _ _.
 
 Arguments irreflexivity {A} _ {Irreflexive} _ _.
@@ -301,7 +296,7 @@ End cancellation.
 
 (* Common names for properties that hold in N, Z, Q, ... *)
 Class ZeroProduct A `{!Mult A} `{!Zero A} : Type
-  := zero_product : forall x y, x * y = 0 -> x = 0 \/ y = 0.
+  := zero_product : forall x y, x * y = 0 -> x = 0 |_| y = 0.
 
 Class ZeroDivisor {R} `{Zero R} `{Mult R} (x : R) : Type
   := zero_divisor : x <> 0 /\ exists y, y <> 0 /\ x * y = 0.
@@ -337,19 +332,19 @@ Notation "(?=)" := compare (only parsing) : mc_scope.
 Notation "( x ?=)" := (compare x) (only parsing) : mc_scope.
 Notation "(?= y )" := (fun x => x ?= y) (only parsing) : mc_scope.
 
-Class Eqb A := eqb : A -> A -> bool.
+Class Eqb A := eqb : A -> A -> Bool.
 Infix "=?" := eqb (at level 70, no associativity) : mc_scope.
 Notation "(=?)" := eqb (only parsing) : mc_scope.
 Notation "( x =?)" := (eqb x) (only parsing) : mc_scope.
 Notation "(=? y )" := (fun x => x =? y) (only parsing) : mc_scope.
 
-Class Ltb A := ltb : A -> A -> bool.
+Class Ltb A := ltb : A -> A -> Bool.
 Infix "<?" := ltb (at level 70, no associativity) : mc_scope.
 Notation "(<?)" := ltb (only parsing) : mc_scope.
 Notation "( x <?)" := (ltb x) (only parsing) : mc_scope.
 Notation "(<? y )" := (fun x => x <? y) (only parsing) : mc_scope.
 
-Class Leb A := leb : A -> A -> bool.
+Class Leb A := leb : A -> A -> Bool.
 Infix "<=?" := leb (at level 70, no associativity) : mc_scope.
 Notation "(<=?)" := leb (only parsing) : mc_scope.
 Notation "( x <=?)" := (leb x) (only parsing) : mc_scope.

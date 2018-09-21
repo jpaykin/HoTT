@@ -6,7 +6,7 @@ Instance decide_eqb `{DecidablePaths A} : Eqb A
   := fun a b => if decide_rel paths a b then true else false.
 
 Lemma decide_eqb_ok@{i} {A:Type@{i} } `{DecidablePaths A} :
-  forall a b, iff@{Ularge i Ularge} (eqb a b = true) (a = b).
+  forall a b, iff@{Set i i} (eqb a b = true) (a = b).
 Proof.
 unfold eqb,decide_eqb.
 intros a b;destruct (decide_rel paths a b) as [E1|E1];split;intros E2;auto.
@@ -86,7 +86,7 @@ intros a b;destruct (trichotomy R a b) as [E1|[E1|E1]];split;auto.
 Qed.
 
 Lemma total_abs_either `{Abs A} `{!TotalRelation le}
-  : forall x : A, (0 <= x /\ abs x = x) \/ (x <= 0 /\ abs x = - x).
+  : forall x : A, (0 <= x /\ abs x = x) |_| (x <= 0 /\ abs x = - x).
 Proof.
 intros x.
 destruct (total le 0 x) as [E|E].

@@ -1,10 +1,15 @@
-# EXPERIMENTAL INSTALL INSTRUCTIONS
-We have experimental opam packages to install both the correct Coq version and the library[1].
-However, the latter cannot be used by people using git to contribute to the library.
-Opam support on windows is experimental.
-[1]: https://github.com/HoTT/HoTT/issues/694
+# INSTALLATION via OPAM
 
-We are compatible with [Coq 8.6](https://coq.inria.fr/distrib/V8.6/files/), so binary packages can be used. Paths still need to be set manually.
+After installing Coq via opam [1]. One can install our version of Coq by:
+```
+   opam install coq.8.8.0
+```
+
+However, one still needs to install the library via git to contribute.
+Opam support on windows is experimental.
+[1]: https://coq.inria.fr/opam/www/using.html
+
+We will be compatible with [Coq 8.9](https://github.com/coq/coq/releases/tag/V8.9.0), so binary packages can be used once it is released.  Until then, the development version of Coq must be installed. Either way, paths still need to be set manually.
 
 
 # QUICK INSTALLATION INSTRUCTIONS
@@ -83,9 +88,11 @@ minimal fuss, you should try your luck by following these instructions:
 
    The library can be loaded into a Coq session with `Require Import HoTT.`
 
-5. If you use ProofGeneral (PG), do not forget to change the name of the Coq
+5. If you use ProofGeneral (PG) for browsing existing theories, it should just
+   work. But in case you want to create theories outside the `HoTT/theories`
+   directory, do not forget to change the name of the Coq
    program called by PG. For instance you can edit the name of the executable
-   called by PG by typing `M-x customize-variable`, then `proof-prog-name` which
+   called by PG by typing `M-x customize-variable`, then `coq-prog-name` which
    displays a customization utility. Another option is to type `M-x
    customize-variable`, then `proof-prog-name-ask`, to click on the `Toogle`
    button in front of `Proof Prog Name Ask` and to save this for future sessions.

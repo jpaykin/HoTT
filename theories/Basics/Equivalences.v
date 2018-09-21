@@ -307,6 +307,27 @@ Proof.
   intros ?; apply contr.
 Defined.
 
+(** The projection from the sum of a family of contractible types is an equivalence. *)
+Global Instance isequiv_pr1 {A : Type} (P : A -> Type) `{forall x, Contr (P x)}
+  : IsEquiv (@pr1 A P).
+Proof.
+  apply (BuildIsEquiv
+           _ _ (@pr1 A P)
+           (fun x => (x ; center (P x)))
+           (fun x => 1)
+           (fun xy => match xy with
+                      | existT x y => ap (exist _ x) (contr _)
+                      end)).
+  intros [x y].
+  rewrite <- ap_compose.
+  symmetry; apply ap_const.
+Defined.
+
+Definition equiv_pr1 {A : Type} (P : A -> Type) `{forall x, Contr (P x)}
+  : { x : A & P x } <~> A
+  := BuildEquiv _ _ (@pr1 A P) _.
+
+
 (** Assuming function extensionality, composing with an equivalence is itself an equivalence *)
 
 Global Instance isequiv_precompose `{Funext} {A B C : Type}
@@ -427,6 +448,15 @@ Ltac equiv_intro E x :=
     | |- forall y, @?Q y =>
       refine (equiv_ind E Q _); intros x
   end.
+
+(** The same, but for several variables. *)
+
+Tactic Notation "equiv_intros" constr(E) ident(x)
+  := equiv_intro E x.
+Tactic Notation "equiv_intros" constr(E) ident(x) ident(y)
+  := equiv_intro E x; equiv_intro E y.
+Tactic Notation "equiv_intros" constr(E) ident(x) ident(y) ident(z)
+  := equiv_intro E x; equiv_intro E y; equiv_intro E z.
 
 (** [equiv_composeR'], a flipped version of [equiv_compose'], is (like [concatR]) most often useful partially applied, to give the “first half” of an equivalence one is constructing and leave the rest as a subgoal. One could similarly define [equiv_composeR] as a flip of [equiv_compose], but it doesn’t seem so useful since it doesn’t leave the remaining equivalence as a subgoal. *)
 Definition equiv_composeR' {A B C} (f : A <~> B) (g : B <~> C)

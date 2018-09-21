@@ -35,6 +35,7 @@ Defined.
 Monomorphic Axiom Univalence : Type0.
 Existing Class Univalence.
 Axiom isequiv_equiv_path : forall `{Univalence} (A B : Type), IsEquiv (equiv_path A B).
+Global Existing Instance isequiv_equiv_path.
 
 Section Univalence.
 Context `{Univalence}.
@@ -100,6 +101,18 @@ Proof.
   destruct p, q. simpl.
   apply path_equiv, path_arrow.
   intros x; reflexivity.
+Defined.
+
+Definition path_universe_compose_uncurried `{Funext} {A B C : Type}
+           (f : A <~> B) (g : B <~> C)
+: path_universe_uncurried (equiv_compose g f)
+= path_universe_uncurried f @ path_universe_uncurried g.
+Proof.
+  revert f. equiv_intro (equiv_path A B) f.
+  revert g. equiv_intro (equiv_path B C) g.
+  refine ((ap path_universe_uncurried (equiv_path_pp f g))^ @ _).
+  refine (eta_path_universe (f @ g) @ _).
+  apply concat2; symmetry; apply eta_path_universe.
 Defined.
 
 Definition path_universe_compose `{Funext} {A B C : Type}

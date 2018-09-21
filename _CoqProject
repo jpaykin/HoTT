@@ -11,7 +11,6 @@ theories/Basics/Contractible.v
 theories/Basics/Equivalences.v
 theories/Basics/Trunc.v
 theories/Basics/Decidable.v
-theories/Basics/FunextVarieties.v
 theories/Basics.v
 theories/Types/Paths.v
 theories/Types/Unit.v
@@ -27,11 +26,13 @@ theories/Types/Wtype.v
 theories/Types/Equiv.v
 theories/Types/Universe.v
 theories/Types.v
+theories/BoundedSearch.v
 theories/EquivGroupoids.v
 theories/Fibrations.v
 theories/Conjugation.v
 theories/HProp.v
 theories/EquivalenceVarieties.v
+theories/FunextVarieties.v
 theories/UnivalenceVarieties.v
 theories/Extensions.v
 theories/HSet.v
@@ -104,6 +105,7 @@ theories/Spaces/No/Core.v
 theories/Spaces/No/Negation.v
 theories/Spaces/No/Addition.v
 theories/Spaces/Universe.v
+theories/Spaces/Card.v
 theories/Algebra/ooGroup.v
 theories/Algebra/Aut.v
 theories/Algebra/ooAction.v
@@ -393,9 +395,13 @@ theories/Classes/orders/nat_int.v
 theories/Classes/orders/integers.v
 theories/Classes/implementations/assume_rationals.v
 theories/Classes/implementations/peano_naturals.v
+theories/Classes/implementations/binary_naturals.v
 theories/Classes/implementations/natpair_integers.v
 theories/Classes/implementations/field_of_fractions.v
 theories/Classes/implementations/list.v
+theories/Classes/implementations/bool.v
+theories/Classes/implementations/hprop_lattice.v
+theories/Classes/implementations/pointwise.v
 theories/Classes/interfaces/monad.v
 theories/Classes/interfaces/abstract_algebra.v
 theories/Classes/interfaces/naturals.v
